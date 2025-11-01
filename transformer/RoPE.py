@@ -1,16 +1,16 @@
 import torch
 # 旋转位置编码
-def build_rope_frequencies(dim, base=10000):
+def build_rope_frequencies(x, dim, base=10000):
     half_dim = dim // 2
-    return 1.0 / (base ** (torch.arange(half_dim, dtype=torch.float32) * 2 / dim))
+    return torch.ones(1, dtype=torch.float32, device=x.device) / (base ** (torch.arange(half_dim, dtype=torch.float32) * 2 / dim))
 
-def build_rope_theta(seqlen, dim, base=10000):
-    position = torch.arange(seqlen,dtype=torch.float32)
-    freq = build_rope_frequencies(dim, base)
+def build_rope_theta(x, seqlen, dim, base=10000):
+    position = torch.arange(seqlen,dtype=torch.float32, device=x.device)
+    freq = build_rope_frequencies(x, dim, base)
     return torch.outer(position, freq) # torch.outer(a, b) 会计算所有 a_i * b_j 的组合，结果为一个矩阵
 
-def build_cos_sin(seqlen, dim, base=10000):
-    theta = build_rope_theta(seqlen, dim, base)
+def build_cos_sin(x, seqlen, dim, base=10000):
+    theta = build_rope_theta(x, seqlen, dim, base)
     return torch.cos(theta), torch.sin(theta) # 维度是[seqlen, dim//2]
 
 def apply_rotary_position(x, cos, sin):
